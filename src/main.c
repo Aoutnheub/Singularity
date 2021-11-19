@@ -53,7 +53,7 @@
 // UI
 #define _UI_BG (Color){10, 10, 10, 150}
 #define _UI_B_RADIUS 0.2
-// ---------------------------------------------------------
+// -------------------------------------------------------------------------- //
 
 typedef struct StrokePoint {
     int x;
@@ -125,7 +125,7 @@ void renderBrushSize(int _size, int _offset) {
     DrawText(size, 20, 20 - _offset, 20, WHITE);
 }
 
-// Returns the width
+// Returns the width of the ui element
 int renderZoomLevel(int _win_width, int _win_height, float _level, int _offset) {
     char s[5]; sprintf(s, "x%2.1f", _level);
     int txt_w = MeasureText(s, 20);
@@ -143,6 +143,7 @@ int renderZoomLevel(int _win_width, int _win_height, float _level, int _offset) 
     return txt_w + 20;
 }
 
+// Returns the width of the ui element
 int renderStrokeCount(
     int _win_width, int _win_height, unsigned _count,
     int _offset, int _prev_offset
@@ -164,6 +165,7 @@ int renderStrokeCount(
     return txt_w + 20;
 }
 
+// Returns the width of the ui element
 int renderPointCount(
     int _win_width, int _win_height, unsigned _count,
     int _offset, int _prev_offset
@@ -184,7 +186,7 @@ int renderPointCount(
 
     return txt_w + 20;
 }
-// ---------------------------------------------------------
+// -------------------------------------------------------------------------- //
 
 int main() {
     #ifdef _MSAA
