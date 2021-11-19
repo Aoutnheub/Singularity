@@ -48,6 +48,7 @@
 #define _KEY_COLOR07 KEY_SEVEN
 #define _KEY_COLOR08 KEY_EIGHT
 #define _KEY_COLOR09 KEY_NINE
+#define _KEY_TOGGLE_UI KEY_TAB
 
 // UI
 #define _UI_BG (Color){10, 10, 10, 150}
@@ -84,9 +85,9 @@ void renderStrokes(
     }
 }
 
-void renderColors(int _win_height, int _selected) {
+void renderColors(int _win_height, int _selected, int _offset) {
     DrawRectangleRounded(
-        (Rectangle){10, _win_height / 2 - 130, 40, 280},
+        (Rectangle){10 - _offset, _win_height / 2 - 130, 40, 280},
         _UI_B_RADIUS, 4, _UI_BG
     );
     Color colors[9] = {
@@ -103,22 +104,25 @@ void renderColors(int _win_height, int _selected) {
     int y_offset = 120;
     for(unsigned i = 0; i < 9; ++i) {
         DrawRectangle(
-            20, _win_height / 2 - y_offset, 20, 20,
+            20 - _offset, _win_height / 2 - y_offset, 20, 20,
             colors[i]
         );
         y_offset -= 30;
     }
     y_offset = 150 - _selected * 30;
-    DrawRectangleLines(19, _win_height / 2 - y_offset - 1, 22, 22, WHITE);
+    DrawRectangleLines(
+        19 - _offset, _win_height / 2 - y_offset - 1,
+        22, 22, WHITE
+    );
 }
 
-void renderBrushSize(int _size) {
+void renderBrushSize(int _size, int _offset) {
     char size[5]; sprintf(size, "%i", _size);
     int txt_w = MeasureText(size, 20);
     DrawRectangleRounded(
-        (Rectangle){10, 10, 20 + txt_w, 40}, _UI_B_RADIUS, 4, _UI_BG
+        (Rectangle){10 - _offset, 10, 20 + txt_w, 40}, _UI_B_RADIUS, 4, _UI_BG
     );
-    DrawText(size, 20, 20, 20, WHITE);
+    DrawText(size, 20 - _offset, 20, 20, WHITE);
 }
 // ---------------------------------------------------------
 
@@ -166,6 +170,9 @@ int main() {
     unsigned stroke_index = 0;
     StrokePoint *last_point = NULL;
     bool drawing = false;
+    int ui_offset = 0;
+    bool animating_ui = false;
+    bool ui_closed = false;
 
     while(!WindowShouldClose()) {
         if(IsWindowResized()) {
@@ -290,8 +297,29 @@ int main() {
             EndMode2D();
 
             // UI
-            renderColors(win_height, brush_color+1);
-            renderBrushSize(brush_size);
+            if(IsKeyPressed(_KEY_TOGGLE_UI)) {
+                animating_ui = true;
+            }
+            if(animating_ui) {
+                float delta = GetFrameTime();
+                if(ui_closed) {
+                    ui_offset -= 1000 * delta;
+                    if(ui_offset < 0) {
+                        ui_offset = 0;
+                        animating_ui = false;
+                        ui_closed = false;
+                    }
+                }else {
+                    ui_offset += 1000 * delta;
+                    if(ui_offset > 80) {
+                        ui_offset = 80;
+                        animating_ui = false;
+                        ui_closed = true;
+                    }
+                }
+            }
+            renderColors(win_height, brush_color+1, ui_offset);
+            renderBrushSize(brush_size, ui_offset);
 
             // Mouse Cursor
             DrawCircleLines(
