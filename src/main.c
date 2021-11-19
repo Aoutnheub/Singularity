@@ -79,6 +79,34 @@ void renderStrokes(
         DrawCircle(cp->x, cp->y, 2, (*_colors)[i]);
     }
 }
+
+void renderColors(int _win_height, int _selected) {
+    DrawRectangleRounded(
+        (Rectangle){10, _win_height / 2 - 130, 40, 280},
+        0.2, 4, (Color){10, 10, 10, 150}
+    );
+    Color colors[9] = {
+        _PALETTE_01,
+        _PALETTE_02,
+        _PALETTE_03,
+        _PALETTE_04,
+        _PALETTE_05,
+        _PALETTE_06,
+        _PALETTE_07,
+        _PALETTE_08,
+        _PALETTE_09
+    };
+    int y_offset = 120;
+    for(unsigned i = 0; i < 9; ++i) {
+        DrawRectangle(
+            20, _win_height / 2 - y_offset, 20, 20,
+            colors[i]
+        );
+        y_offset -= 30;
+    }
+    y_offset = 150 - _selected * 30;
+    DrawRectangleLines(19, _win_height / 2 - y_offset - 1, 22, 22, WHITE);
+}
 // ---------------------------------------------------------
 
 int main() {
@@ -90,7 +118,18 @@ int main() {
 
     int win_width = _INIT_W, win_height = _INIT_H;
     int brush_size = _INIT_BRUSH_SIZE;
-    Color brush_color = _PALETTE_01;
+    Color colors[9] = {
+        _PALETTE_01,
+        _PALETTE_02,
+        _PALETTE_03,
+        _PALETTE_04,
+        _PALETTE_05,
+        _PALETTE_06,
+        _PALETTE_07,
+        _PALETTE_08,
+        _PALETTE_09
+    };
+    unsigned brush_color = 0;
     InitWindow(win_width, win_height, "Singularity");
 
     Camera2D camera = {
@@ -116,6 +155,11 @@ int main() {
     bool drawing = false;
 
     while(!WindowShouldClose()) {
+        if(IsWindowResized()) {
+            win_width = GetScreenWidth();
+            win_height = GetScreenHeight();
+        }
+
         if(GetMouseWheelMove() < 0) {
             camera.zoom -= 0.1;
             if(camera.zoom <= 0) camera.zoom = 0.1;
@@ -164,23 +208,23 @@ int main() {
         // Colors
         // TODO: Make it not bad
         if(IsKeyPressed(_KEY_COLOR01))
-            brush_color = _PALETTE_01;
+            brush_color = 0;
         else if(IsKeyPressed(_KEY_COLOR02))
-            brush_color = _PALETTE_02;
+            brush_color = 1;
         else if(IsKeyPressed(_KEY_COLOR03))
-            brush_color = _PALETTE_03;
+            brush_color = 2;
         else if(IsKeyPressed(_KEY_COLOR04))
-            brush_color = _PALETTE_04;
+            brush_color = 3;
         else if(IsKeyPressed(_KEY_COLOR05))
-            brush_color = _PALETTE_05;
+            brush_color = 4;
         else if(IsKeyPressed(_KEY_COLOR06))
-            brush_color = _PALETTE_06;
+            brush_color = 5;
         else if(IsKeyPressed(_KEY_COLOR07))
-            brush_color = _PALETTE_07;
+            brush_color = 6;
         else if(IsKeyPressed(_KEY_COLOR08))
-            brush_color = _PALETTE_08;
+            brush_color = 7;
         else if(IsKeyPressed(_KEY_COLOR09))
-            brush_color = _PALETTE_09;
+            brush_color = 8;
 
         // Start drawing
         if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -190,7 +234,7 @@ int main() {
             strokes[stroke_index].next = NULL;
             last_point = &(strokes[stroke_index]);
             stroke_sizes[stroke_index] = brush_size;
-            stroke_colors[stroke_index] = brush_color;
+            stroke_colors[stroke_index] = colors[brush_color];
             drawing = true;
             TraceLog(LOG_INFO, "Started stronk with index %i", stroke_index);
             ++stroke_index;
@@ -231,6 +275,9 @@ int main() {
                 );
 
             EndMode2D();
+
+            // UI
+            renderColors(win_height, brush_color+1);
 
             // Mouse Cursor
             DrawCircleLines(
