@@ -1,0 +1,2 @@
+# Singularity
+Simple whiteboard app
