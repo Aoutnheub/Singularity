@@ -48,6 +48,10 @@
 #define _KEY_COLOR07 KEY_SEVEN
 #define _KEY_COLOR08 KEY_EIGHT
 #define _KEY_COLOR09 KEY_NINE
+
+// UI
+#define _UI_BG (Color){10, 10, 10, 150}
+#define _UI_B_RADIUS 0.2
 // ---------------------------------------------------------
 
 typedef struct StrokePoint {
@@ -83,7 +87,7 @@ void renderStrokes(
 void renderColors(int _win_height, int _selected) {
     DrawRectangleRounded(
         (Rectangle){10, _win_height / 2 - 130, 40, 280},
-        0.2, 4, (Color){10, 10, 10, 150}
+        _UI_B_RADIUS, 4, _UI_BG
     );
     Color colors[9] = {
         _PALETTE_01,
@@ -106,6 +110,15 @@ void renderColors(int _win_height, int _selected) {
     }
     y_offset = 150 - _selected * 30;
     DrawRectangleLines(19, _win_height / 2 - y_offset - 1, 22, 22, WHITE);
+}
+
+void renderBrushSize(int _size) {
+    char size[5]; sprintf(size, "%i", _size);
+    int txt_w = MeasureText(size, 20);
+    DrawRectangleRounded(
+        (Rectangle){10, 10, 20 + txt_w, 40}, _UI_B_RADIUS, 4, _UI_BG
+    );
+    DrawText(size, 20, 20, 20, WHITE);
 }
 // ---------------------------------------------------------
 
@@ -278,6 +291,7 @@ int main() {
 
             // UI
             renderColors(win_height, brush_color+1);
+            renderBrushSize(brush_size);
 
             // Mouse Cursor
             DrawCircleLines(
