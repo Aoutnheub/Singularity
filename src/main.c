@@ -124,6 +124,66 @@ void renderBrushSize(int _size, int _offset) {
     );
     DrawText(size, 20, 20 - _offset, 20, WHITE);
 }
+
+// Returns the width
+int renderZoomLevel(int _win_width, int _win_height, float _level, int _offset) {
+    char s[5]; sprintf(s, "x%2.1f", _level);
+    int txt_w = MeasureText(s, 20);
+    DrawRectangleRounded(
+        (Rectangle){
+            _win_width - 30 - txt_w, _win_height - 50 + _offset,20 + txt_w, 40
+        }, _UI_B_RADIUS, 4, _UI_BG
+    );
+    DrawText(
+        s,
+        _win_width - 20 - txt_w, _win_height - 40 + _offset,
+        20, WHITE
+    );
+
+    return txt_w + 20;
+}
+
+int renderStrokeCount(
+    int _win_width, int _win_height, unsigned _count,
+    int _offset, int _prev_offset
+) {
+    char s[32]; sprintf(s, "Strokes: %i", _count);
+    int txt_w = MeasureText(s, 20);
+    DrawRectangleRounded(
+        (Rectangle){
+            _win_width - 30 - txt_w - _prev_offset,
+            _win_height - 50 + _offset,20 + txt_w, 40
+        }, _UI_B_RADIUS, 4, _UI_BG
+    );
+    DrawText(
+        s,
+        _win_width - 20 - txt_w - _prev_offset, _win_height - 40 + _offset,
+        20, WHITE
+    );
+
+    return txt_w + 20;
+}
+
+int renderPointCount(
+    int _win_width, int _win_height, unsigned _count,
+    int _offset, int _prev_offset
+) {
+    char s[32]; sprintf(s, "Points: %i", _count);
+    int txt_w = MeasureText(s, 20);
+    DrawRectangleRounded(
+        (Rectangle){
+            _win_width - 30 - txt_w - _prev_offset,
+            _win_height - 50 + _offset,20 + txt_w, 40
+        }, _UI_B_RADIUS, 4, _UI_BG
+    );
+    DrawText(
+        s,
+        _win_width - 20 - txt_w - _prev_offset, _win_height - 40 + _offset,
+        20, WHITE
+    );
+
+    return txt_w + 20;
+}
 // ---------------------------------------------------------
 
 int main() {
@@ -173,6 +233,7 @@ int main() {
     int ui_offset = 0;
     bool animating_ui = false;
     bool ui_closed = false;
+    unsigned point_count = 0;
 
     while(!WindowShouldClose()) {
         if(IsWindowResized()) {
@@ -182,7 +243,7 @@ int main() {
 
         if(GetMouseWheelMove() < 0) {
             camera.zoom -= 0.1;
-            if(camera.zoom <= 0) camera.zoom = 0.1;
+            if(camera.zoom < 0.1) camera.zoom = 0.1;
         }else if(GetMouseWheelMove() > 0) {
             camera.zoom += 0.1;
             if(camera.zoom > 3) camera.zoom = 3;
@@ -258,6 +319,7 @@ int main() {
             stroke_colors[stroke_index] = colors[brush_color];
             drawing = true;
             ++stroke_index;
+            ++point_count;
         }
         // Stop drawing
         else if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && drawing) {
@@ -270,6 +332,7 @@ int main() {
             last_point->next->next = NULL;
             last_point = NULL;
             drawing = false;
+            ++point_count;
         }
         // Draw
         else if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && drawing) {
@@ -281,6 +344,7 @@ int main() {
             last_point->next->prev = last_point;
             last_point->next->next = NULL;
             last_point = last_point->next;
+            ++point_count;
         }
 
         BeginDrawing();
@@ -320,6 +384,16 @@ int main() {
             }
             renderColors(win_height, brush_color+1, ui_offset);
             renderBrushSize(brush_size, ui_offset);
+            int zoom_lvl_w = renderZoomLevel(
+                win_width, win_height, camera.zoom, ui_offset
+            );
+            int point_cnt_w = renderPointCount(
+                win_width, win_height, point_count, ui_offset, zoom_lvl_w + 10
+            );
+            renderStrokeCount(
+                win_width, win_height, stroke_index,
+                ui_offset, zoom_lvl_w + point_cnt_w + 20
+            );
 
             // Mouse Cursor
             DrawCircleLines(
