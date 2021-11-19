@@ -193,7 +193,8 @@ int main() {
         // Key bindings
         if(IsKeyPressed(_KEY_RESET_ZOOM)) {
             camera.zoom = 1;
-        }else if(IsKeyPressed(_KEY_INC_BRUSH_SIZE)) {
+        }
+        if(IsKeyPressed(_KEY_INC_BRUSH_SIZE)) {
             brush_size += _BRUSH_INC;
         }else if(IsKeyPressed(_KEY_DEC_BRUSH_SIZE)) {
             brush_size -= _BRUSH_INC;
@@ -256,7 +257,6 @@ int main() {
             stroke_sizes[stroke_index] = brush_size;
             stroke_colors[stroke_index] = colors[brush_color];
             drawing = true;
-            TraceLog(LOG_INFO, "Started stronk with index %i", stroke_index);
             ++stroke_index;
         }
         // Stop drawing
@@ -323,7 +323,7 @@ int main() {
 
             // Mouse Cursor
             DrawCircleLines(
-                mouse_x, mouse_y, brush_size / 2,
+                mouse_x, mouse_y, brush_size / 2 * camera.zoom,
                 (Color){230, 230, 230, 150}
             );
 
