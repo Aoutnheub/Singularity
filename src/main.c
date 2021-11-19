@@ -120,9 +120,9 @@ void renderBrushSize(int _size, int _offset) {
     char size[5]; sprintf(size, "%i", _size);
     int txt_w = MeasureText(size, 20);
     DrawRectangleRounded(
-        (Rectangle){10 - _offset, 10, 20 + txt_w, 40}, _UI_B_RADIUS, 4, _UI_BG
+        (Rectangle){10, 10 - _offset, 20 + txt_w, 40}, _UI_B_RADIUS, 4, _UI_BG
     );
-    DrawText(size, 20 - _offset, 20, 20, WHITE);
+    DrawText(size, 20, 20 - _offset, 20, WHITE);
 }
 // ---------------------------------------------------------
 
@@ -311,8 +311,8 @@ int main() {
                     }
                 }else {
                     ui_offset += 1000 * delta;
-                    if(ui_offset > 80) {
-                        ui_offset = 80;
+                    if(ui_offset > 50) {
+                        ui_offset = 50;
                         animating_ui = false;
                         ui_closed = true;
                     }
