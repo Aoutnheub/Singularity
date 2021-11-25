@@ -85,27 +85,18 @@ void renderStrokes(
     }
 }
 
-void renderColors(int _win_height, int _selected, int _offset) {
+void renderColors(
+    int _win_height, Color _colors[9], int _selected, int _offset
+) {
     DrawRectangleRounded(
         (Rectangle){10 - _offset, _win_height / 2 - 130, 40, 280},
         _UI_B_RADIUS, 4, _UI_BG
     );
-    Color colors[9] = {
-        _PALETTE_01,
-        _PALETTE_02,
-        _PALETTE_03,
-        _PALETTE_04,
-        _PALETTE_05,
-        _PALETTE_06,
-        _PALETTE_07,
-        _PALETTE_08,
-        _PALETTE_09
-    };
     int y_offset = 120;
     for(unsigned i = 0; i < 9; ++i) {
         DrawRectangle(
             20 - _offset, _win_height / 2 - y_offset, 20, 20,
-            colors[i]
+            _colors[i]
         );
         y_offset -= 30;
     }
@@ -126,7 +117,9 @@ void renderBrushSize(int _size, int _offset) {
 }
 
 // Returns the width of the ui element
-int renderZoomLevel(int _win_width, int _win_height, float _level, int _offset) {
+int renderZoomLevel(
+    int _win_width, int _win_height, float _level, int _offset
+) {
     char s[5]; sprintf(s, "x%2.1f", _level);
     int txt_w = MeasureText(s, 20);
     DrawRectangleRounded(
@@ -384,7 +377,7 @@ int main() {
                     }
                 }
             }
-            renderColors(win_height, brush_color+1, ui_offset);
+            renderColors(win_height, colors, brush_color+1, ui_offset);
             renderBrushSize(brush_size, ui_offset);
             int zoom_lvl_w = renderZoomLevel(
                 win_width, win_height, camera.zoom, ui_offset
