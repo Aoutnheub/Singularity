@@ -1,7 +1,10 @@
-<h1 align="center">WIP</h1>
+<h1 align="center">⚠️ WIP ⚠</h1>
 
-![Logo](images/logo.png)
-<p align="center">Simple whiteboard app with an infinite canvas</p>
+<img src="logo.png" align="left"/>
+
+# Singularity
+
+Simple whiteboard app with an infinite canvas
 
 ![App](images/sc1.png)
 
