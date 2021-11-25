@@ -58,30 +58,58 @@
 typedef struct StrokePoint {
     int x;
     int y;
-    struct StrokePoint *prev;
     struct StrokePoint *next;
 } StrokePoint;
+
+StrokePoint* createStrokePoint(int _x, int _y) {
+    StrokePoint *point = malloc(sizeof(StrokePoint));
+    if(point == NULL) return NULL;
+    point->x = _x;
+    point->y = _y;
+    point->next = NULL;
+
+    return point;
+}
+
+typedef struct Stroke {
+    int size;
+    Color color;
+    struct StrokePoint *points;
+    struct Stroke *next;
+} Stroke;
+
+Stroke* createStroke(int _size, Color _color) {
+    Stroke *stroke = malloc(sizeof(Stroke));
+    if(stroke == NULL) return NULL;
+    stroke->size = _size;
+    stroke->color = _color;
+    stroke->points = NULL;
+    stroke->next = NULL;
+
+    return stroke;
+}
 
 // int vec2Length(Vector2 _p1, Vector2 _p2) {
 //     int s = pow(_p1.x - _p2.x, 2) + pow(_p1.y - _p2.y, 2);
 //     return sqrt(s);
 // }
 
-void renderStrokes(
-    StrokePoint **_strokes, unsigned _count, int **_sizes, Color **_colors
-) {
-    for(unsigned i = 0; i < _count; ++i) {
-        StrokePoint *cp = &(*_strokes)[i];
-        while(cp->next != NULL) {
-            DrawCircle(cp->x, cp->y, (*_sizes)[i]/2, (*_colors)[i]);
-            DrawLineEx(
-                (Vector2){cp->x, cp->y},
-                (Vector2){cp->next->x, cp->next->y},
-                (*_sizes)[i], (*_colors)[i]
-            );
+void renderStrokes(Stroke *_strokes) {
+    Stroke *cs = _strokes;
+    while(cs != NULL) {
+        StrokePoint *cp = cs->points;
+        while(cp != NULL) {
+            DrawCircle(cp->x, cp->y, cs->size/2, cs->color);
+            if(cp->next != NULL) {
+                DrawLineEx(
+                    (Vector2){cp->x, cp->y},
+                    (Vector2){cp->next->x, cp->next->y},
+                    cs->size, cs->color
+                );
+            }
             cp = cp->next;
         }
-        DrawCircle(cp->x, cp->y, 2, (*_colors)[i]);
+        cs = cs->next;
     }
 }
 
@@ -189,6 +217,18 @@ int main() {
     #endif
 
     int win_width = _INIT_W, win_height = _INIT_H;
+
+    InitWindow(win_width, win_height, "Singularity");
+
+    Camera2D camera = {
+        (Vector2){0, 0}, // offset
+        (Vector2){0, 0}, // target
+        0, 1 // rotation, zoom
+    };
+
+    SetTargetFPS(_FPS);
+    HideCursor();
+
     int brush_size = _INIT_BRUSH_SIZE;
     Color colors[9] = {
         _PALETTE_01,
@@ -202,33 +242,16 @@ int main() {
         _PALETTE_09
     };
     unsigned brush_color = 0;
-    InitWindow(win_width, win_height, "Singularity");
-
-    Camera2D camera = {
-        (Vector2){0, 0}, // offset
-        (Vector2){0, 0}, // target
-        0, 1 // rotation, zoom
-    };
-
-    SetTargetFPS(_FPS);
-    HideCursor();
-
     Vector2 last_mouse_pos = {0, 0};
-
-    // !WARNING Changing the stroke limit will give an error if a save file
-    // bigger than the limit is being loaded
-    StrokePoint *strokes = malloc(sizeof(StrokePoint) * 100000);
-    int *stroke_sizes = malloc(sizeof(int) * 100000);
-    Color *stroke_colors = malloc(sizeof(Color) * 100000);
-    if(strokes == NULL || stroke_sizes == NULL || stroke_colors == NULL)
-        TraceLog(LOG_ERROR, "Oh no!\n");
-    unsigned stroke_index = 0;
+    Stroke *strokes = NULL;
+    unsigned stroke_count = 0;
+    unsigned point_count = 0;
+    Stroke *last_stroke = NULL;
     StrokePoint *last_point = NULL;
     bool drawing = false;
     int ui_offset = 0;
     bool animating_ui = false;
     bool ui_closed = false;
-    unsigned point_count = 0;
 
     while(!WindowShouldClose()) {
         if(IsWindowResized()) {
@@ -305,53 +328,53 @@ int main() {
 
         // Start drawing
         if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            strokes[stroke_index].x = (mouse_x / camera.zoom) + camera.target.x;
-            strokes[stroke_index].y = (mouse_y / camera.zoom) + camera.target.y;
-            strokes[stroke_index].prev = NULL;
-            strokes[stroke_index].next = NULL;
-            last_point = &(strokes[stroke_index]);
-            stroke_sizes[stroke_index] = brush_size;
-            stroke_colors[stroke_index] = colors[brush_color];
-            drawing = true;
-            ++stroke_index;
+            if(stroke_count == 0) {
+                strokes = createStroke(brush_size, colors[brush_color]);
+                strokes->points = createStrokePoint(
+                    (mouse_x / camera.zoom) + camera.target.x,
+                    (mouse_y / camera.zoom) + camera.target.y
+                );
+                last_stroke = strokes;
+                last_point = strokes->points;
+            }else {
+                last_stroke->next = createStroke(brush_size, colors[brush_color]);
+                last_stroke->next->points = createStrokePoint(
+                    (mouse_x / camera.zoom) + camera.target.x,
+                    (mouse_y / camera.zoom) + camera.target.y
+                );
+                last_stroke = last_stroke->next;
+                last_point = last_stroke->points;
+            }
+            ++stroke_count;
             ++point_count;
+            drawing = true;
         }
         // Stop drawing
         else if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && drawing) {
-            last_point->next = malloc(sizeof(StrokePoint));
-            if(last_point->next == NULL)
-                TraceLog(LOG_ERROR, "Something's bad\n");
-            last_point->next->x = (mouse_x / camera.zoom) + camera.target.x;
-            last_point->next->y = (mouse_y / camera.zoom) + camera.target.y;
-            last_point->next->prev = last_point;
-            last_point->next->next = NULL;
+            last_point->next = createStrokePoint(
+                (mouse_x / camera.zoom) + camera.target.x,
+                (mouse_y / camera.zoom) + camera.target.y
+            );
             last_point = NULL;
-            drawing = false;
             ++point_count;
+            drawing = false;
         }
         // Draw
         else if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && drawing) {
-            last_point->next = malloc(sizeof(StrokePoint));
-            if(last_point->next == NULL)
-                TraceLog(LOG_ERROR, "Oopsie\n");
-            last_point->next->x = (mouse_x / camera.zoom) + camera.target.x;
-            last_point->next->y = (mouse_y / camera.zoom) + camera.target.y;
-            last_point->next->prev = last_point;
-            last_point->next->next = NULL;
+            last_point->next = createStrokePoint(
+                (mouse_x / camera.zoom) + camera.target.x,
+                (mouse_y / camera.zoom) + camera.target.y
+            );
             last_point = last_point->next;
             ++point_count;
         }
 
         BeginDrawing();
-
             ClearBackground(_BG_COLOR);
 
             BeginMode2D(camera);
 
-                renderStrokes(
-                    &strokes, stroke_index,
-                    &stroke_sizes, &stroke_colors
-                );
+                renderStrokes(strokes);
 
             EndMode2D();
 
@@ -386,7 +409,7 @@ int main() {
                 win_width, win_height, point_count, ui_offset, zoom_lvl_w + 10
             );
             renderStrokeCount(
-                win_width, win_height, stroke_index,
+                win_width, win_height, stroke_count,
                 ui_offset, zoom_lvl_w + point_cnt_w + 20
             );
 
@@ -395,7 +418,6 @@ int main() {
                 mouse_x, mouse_y, brush_size / 2 * camera.zoom,
                 (Color){230, 230, 230, 150}
             );
-
         EndDrawing();
 
         last_mouse_pos.x = mouse_x;
@@ -403,17 +425,18 @@ int main() {
     }
 
     // Clean up
-    for(unsigned i = 0; i < stroke_index; ++i) {
-        StrokePoint *cp = strokes[i].next;
+    Stroke *cs = strokes;
+    while(cs != NULL) {
+        StrokePoint *cp = cs->points;
         while(cp != NULL) {
-            StrokePoint *next_p = cp->next;
+            StrokePoint *np = cp->next;
             free(cp);
-            cp = next_p;
+            cp = np;
         }
+        Stroke *ns = cs->next;
+        free(cs);
+        cs = ns;
     }
-    free(strokes);
-    free(stroke_sizes);
-    free(stroke_colors);
 
     CloseWindow();
 }
