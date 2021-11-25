@@ -5,7 +5,7 @@
 # Singularity
 
 <p>
-    <img src="https://img.shields.io/badge/Latest_Release-0.1-green?style=for-the-badge"/>
+    <img src="https://img.shields.io/badge/Latest_Release-None-green?style=for-the-badge"/>
     <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge"/>
 </p>
 
@@ -13,7 +13,7 @@ Simple whiteboard app with an infinite canvas
 
 ![App](images/sc1.png)
 
-# Install
+## Build
 
 _Binary distributions comming soon_
 
@@ -25,7 +25,7 @@ Run `build.sh` from the root folder
 
 Run `build.bat` from the root folder
 
-# Keybindings
+## Keybindings
 
 - `Mouse wheel` : Zoom in / out
 - `r` : Reset zoom
@@ -39,12 +39,12 @@ Run `build.bat` from the root folder
 - `0-9` : Select color
 - `Tab` : Hide / Show UI
 
-# Configuration
+## Configuration
 
 No configuration file yet. For now you have to modify the macros starting with `_` and recompile.
 
-# Dependencies
+## Dependencies
 
 - [Raylib](https://www.raylib.com/index.html) (included)
-- [Cmake](https://cmake.org/)
+- [CMake](https://cmake.org/)
 - [Git](https://git-scm.com/)

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 #include "../raylib/build/raylib/include/raylib.h"
 
 #define _FPS 60
@@ -89,10 +90,10 @@ Stroke* createStroke(int _size, Color _color) {
     return stroke;
 }
 
-// int vec2Length(Vector2 _p1, Vector2 _p2) {
-//     int s = pow(_p1.x - _p2.x, 2) + pow(_p1.y - _p2.y, 2);
-//     return sqrt(s);
-// }
+int vec2Length(int _x1, int _y1, int _x2, int _y2) {
+    int s = pow(_x1 - _x2, 2) + pow(_y1 - _y2, 2);
+    return sqrt(s);
+}
 
 void renderStrokes(Stroke *_strokes) {
     Stroke *cs = _strokes;
@@ -395,12 +396,16 @@ int main() {
         }
         // Draw
         else if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && drawing) {
-            last_point->next = createStrokePoint(
-                (mouse_x / camera.zoom) + camera.target.x,
-                (mouse_y / camera.zoom) + camera.target.y
-            );
-            last_point = last_point->next;
-            ++point_count;
+            int new_x = (mouse_x / camera.zoom) + camera.target.x;
+            int new_y = (mouse_y / camera.zoom) + camera.target.y;
+            if(vec2Length(
+                last_point->x, last_point->y,
+                new_x, new_y
+            ) > 3) {
+                last_point->next = createStrokePoint(new_x, new_y);
+                last_point = last_point->next;
+                ++point_count;
+            }
         }
 
         BeginDrawing();
