@@ -26,3 +26,9 @@
 # Configuration
 
 No configuration file yet. For now you have to modify the macros starting with `_` and recompile.
+
+# Dependencies
+
+- [Raylib](https://www.raylib.com/index.html) (included)
+- [Cmake](https://cmake.org/)
+- [Git](https://git-scm.com/)
