@@ -99,7 +99,7 @@ void renderStrokes(Stroke *_strokes) {
     while(cs != NULL) {
         StrokePoint *cp = cs->points;
         while(cp != NULL) {
-            DrawCircle(cp->x, cp->y, cs->size/2, cs->color);
+            DrawCircle(cp->x, cp->y, (float)cs->size/2, cs->color);
             if(cp->next != NULL) {
                 DrawLineEx(
                     (Vector2){cp->x, cp->y},
@@ -117,7 +117,7 @@ void renderColors(
     int _win_height, Color _colors[9], int _selected, int _offset
 ) {
     DrawRectangleRounded(
-        (Rectangle){10 - _offset, _win_height / 2 - 130, 40, 280},
+        (Rectangle){10 - _offset, (float)_win_height / 2 - 130, 40, 280},
         _UI_B_RADIUS, 4, _UI_BG
     );
     int y_offset = 120;
@@ -248,6 +248,8 @@ int main() {
     unsigned point_count = 0;
     Stroke *last_stroke = NULL;
     StrokePoint *last_point = NULL;
+    Stroke *history[64];
+    unsigned history_index = 0;
     bool drawing = false;
     int ui_offset = 0;
     bool animating_ui = false;
@@ -280,6 +282,22 @@ int main() {
             if(brush_size <= 0) brush_size = _BRUSH_INC;
         }else if(IsKeyPressed(_KEY_RESET_BRUSH_SIZE)) {
             brush_size = _INIT_BRUSH_SIZE;
+        }
+
+        if(IsKeyDown(_KEY_MODIFIER)) {
+            if(IsKeyPressed(_KEY_UNDO) && history_index < 64) {
+                Stroke **ls = &strokes;
+                for(int i = 0; i < stroke_count; ++i) {
+                    if(i == stroke_count-2) {
+                        history[history_index] = (*ls)->next;
+                        (*ls)->next = NULL;
+                        last_stroke = *ls;
+                    }
+                    ls = &((*ls)->next);
+                }
+                ++history_index;
+                --stroke_count;
+            }
         }
 
         // Pan
@@ -328,6 +346,20 @@ int main() {
 
         // Start drawing
         if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            // Clear history
+            if(history_index != 0) {
+                for(unsigned i = 0; i < history_index; ++i) {
+                    StrokePoint *cp = history[i]->points;
+                    while(cp != NULL) {
+                        StrokePoint *np = cp->next;
+                        free(cp);
+                        cp = np;
+                    }
+                    free(history[i]);
+                }
+                history_index = 0;
+            }
+
             if(stroke_count == 0) {
                 strokes = createStroke(brush_size, colors[brush_color]);
                 strokes->points = createStrokePoint(
@@ -337,7 +369,9 @@ int main() {
                 last_stroke = strokes;
                 last_point = strokes->points;
             }else {
-                last_stroke->next = createStroke(brush_size, colors[brush_color]);
+                last_stroke->next = createStroke(
+                    brush_size, colors[brush_color]
+                );
                 last_stroke->next->points = createStrokePoint(
                     (mouse_x / camera.zoom) + camera.target.x,
                     (mouse_y / camera.zoom) + camera.target.y
@@ -415,7 +449,7 @@ int main() {
 
             // Mouse Cursor
             DrawCircleLines(
-                mouse_x, mouse_y, brush_size / 2 * camera.zoom,
+                mouse_x, mouse_y, (float)brush_size / 2 * camera.zoom,
                 (Color){230, 230, 230, 150}
             );
         EndDrawing();
