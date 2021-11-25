@@ -13,7 +13,7 @@ Simple whiteboard app with an infinite canvas
 
 ![App](images/sc1.png)
 
-# Install
+# Build
 
 _Binary distributions comming soon_
 
@@ -46,5 +46,5 @@ No configuration file yet. For now you have to modify the macros starting with `
 # Dependencies
 
 - [Raylib](https://www.raylib.com/index.html) (included)
-- [Cmake](https://cmake.org/)
+- [CMake](https://cmake.org/)
 - [Git](https://git-scm.com/)
