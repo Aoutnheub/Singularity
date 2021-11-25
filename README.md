@@ -4,6 +4,11 @@
 
 # Singularity
 
+<p>
+    <img src="https://img.shields.io/badge/Latest_Release-0.1-green?style=for-the-badge"/>
+    <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge"/>
+</p>
+
 Simple whiteboard app with an infinite canvas
 
 ![App](images/sc1.png)
