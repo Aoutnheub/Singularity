@@ -7,7 +7,15 @@
 
 # Install
 
-**COMMING SOON**
+_Binary distributions comming soon_
+
+**Linux**
+
+Run `build.sh` from the root folder
+
+**Windows**
+
+Run `build.bat` from the root folder
 
 # Keybindings
 
