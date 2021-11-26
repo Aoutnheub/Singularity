@@ -286,18 +286,41 @@ int main() {
         }
 
         if(IsKeyDown(_KEY_MODIFIER)) {
+            // Undo & Redo
             if(IsKeyPressed(_KEY_UNDO) && history_index < 64) {
-                Stroke **ls = &strokes;
-                for(int i = 0; i < stroke_count; ++i) {
-                    if(i == stroke_count-2) {
-                        history[history_index] = (*ls)->next;
-                        (*ls)->next = NULL;
-                        last_stroke = *ls;
+                if(stroke_count > 1) {
+                    Stroke **ls = &strokes;
+                    for(int i = 0; i < stroke_count; ++i) {
+                        if(i == stroke_count-2) {
+                            history[history_index] = (*ls)->next;
+                            (*ls)->next = NULL;
+                            last_stroke = *ls;
+                        }
+                        ls = &((*ls)->next);
                     }
-                    ls = &((*ls)->next);
+                    ++history_index;
+                    --stroke_count;
+                }else if(stroke_count == 1) {
+                    history[history_index] = strokes;
+                    strokes = NULL;
+                    last_stroke = NULL;
+                    ++history_index;
+                    --stroke_count;
                 }
-                ++history_index;
-                --stroke_count;
+            }else if(IsKeyPressed(_KEY_REDO) && history_index != 0) {
+                if(last_stroke != NULL) {
+                    --history_index;
+                    last_stroke->next = history[history_index];
+                    history[history_index] = NULL;
+                    last_stroke = last_stroke->next;
+                    ++stroke_count;
+                }else {
+                    --history_index;
+                    strokes = history[history_index];
+                    history[history_index] = NULL;
+                    last_stroke = strokes;
+                    ++stroke_count;
+                }
             }
         }
 

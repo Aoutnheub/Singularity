@@ -35,7 +35,7 @@ Run `build.bat` from the root folder
 - `Middle mouse` : Pan
 - `w/s/a/d` : Pan up / down / left / right
 - `Ctrl + z` : Undo
-- ~~`Ctrl + y` : Redo~~
+- `Ctrl + y` : Redo
 - `0-9` : Select color
 - `Tab` : Hide / Show UI
 
