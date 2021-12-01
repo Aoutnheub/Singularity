@@ -3,7 +3,8 @@ cmake_minimum_required(VERSION 3.16)
 project(Singularity VERSION 0.1)
 set(_name ${PROJECT_NAME}-${PROJECT_VERSION})
 set(_src
-    "src/main.c")
+    "src/main.c"
+    "src/themes.h")
 add_executable(${_name} ${_src})
 IF(WIN32)
     target_link_libraries(${_name} -LIBPATH:${PROJECT_SOURCE_DIR}/raylib/build/raylib/Release raylib -LIBPATH:${PROJECT_SOURCE_DIR}/raylib/build/raylib/external/glfw/src/Release glfw3 Winmm)

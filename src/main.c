@@ -3,26 +3,22 @@
 #include <math.h>
 #include "../raylib/build/raylib/include/raylib.h"
 
+// #define _DEBUG
+
 #define _FPS 60
-#define _MSAA
+#define _MSAA // Disable to increase performance
 
 // Initial window size
 #define _INIT_W 1280
 #define _INIT_H 720
 
-// Canvas color
-#define _BG_COLOR (Color){32, 33, 36, 255}
-
 // Color palette
-#define _PALETTE_01 (Color){240, 240, 240, 255}
-#define _PALETTE_02 (Color){10, 10, 10, 255}
-#define _PALETTE_03 (Color){255, 97, 136, 255}
-#define _PALETTE_04 (Color){169, 220, 118, 255}
-#define _PALETTE_05 (Color){120, 220, 232, 255}
-#define _PALETTE_06 (Color){252, 152, 103, 255}
-#define _PALETTE_07 (Color){255, 216, 102, 255}
-#define _PALETTE_08 (Color){171, 157, 242, 255}
-#define _PALETTE_09 (Color){255, 200, 221, 255}
+// Define one of the following
+#define _THEME_DEFAULT
+// #define _THEME_DEFAULT_LIGHT
+// #define _THEME_HARD
+// #define _THEME_HARD_LIGHT
+#include "themes.h"
 
 // Brush size
 #define _INIT_BRUSH_SIZE 4
@@ -281,10 +277,14 @@ Stroke* openBoard(
 // -------------------------------------------------------------------------- //
 
 int main() {
+    #ifdef _DEBUG
+    SetConfigFlags(FLAG_MSAA_4X_HINT);
+    #else
     #ifdef _MSAA
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT);
     #else
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT);
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    #endif
     #endif
 
     int win_width = _INIT_W, win_height = _INIT_H;
