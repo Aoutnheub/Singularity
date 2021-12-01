@@ -282,9 +282,9 @@ Stroke* openBoard(
 
 int main() {
     #ifdef _MSAA
-    SetConfigFlags(/*FLAG_WINDOW_RESIZABLE |*/ FLAG_MSAA_4X_HINT);
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT);
     #else
-    SetConfigFlags(/*FLAG_WINDOW_RESIZABLE |*/ FLAG_MSAA_4X_HINT);
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT);
     #endif
 
     int win_width = _INIT_W, win_height = _INIT_H;
