@@ -1,21 +1,21 @@
-<h1 align="center">⚠️ WIP ⚠</h1>
-
 <img src="logo.png" align="left"/>
 
 # Singularity
 
 <p>
-    <img src="https://img.shields.io/badge/Latest_Release-None-green?style=for-the-badge"/>
+    <img src="https://img.shields.io/badge/Latest_Release-0.1-green?style=for-the-badge"/>
     <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge"/>
 </p>
 
 Simple whiteboard app with an infinite canvas
 
+⚠️ This is a W.I.P, many features are still missing.
+
 ![App](images/sc1.png)
 
 ## Build
 
-_Binary distributions comming soon_
+[Binary distributions](https://github.com/Aoutnheub/Singularity/releases) available
 
 **Linux**
 
@@ -38,6 +38,7 @@ Run `build.bat` from the root folder
 - `Ctrl + y` : Redo
 - `0-9` : Select color
 - `Tab` : Hide / Show UI
+- `Ctrl + s` : Save
 
 ## Configuration
 
