@@ -13,6 +13,11 @@ Simple whiteboard app with an infinite canvas
 
 ![App](images/sc1.png)
 
+## Changelog v0.2
+
+- 3 new themes
+- improved idle performance
+
 ## Build
 
 [Binary distributions](https://github.com/Aoutnheub/Singularity/releases) available

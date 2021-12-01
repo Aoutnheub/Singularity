@@ -325,6 +325,7 @@ int main() {
     int ui_offset = 0;
     bool animating_ui = false;
     bool ui_closed = false;
+    bool win_gained_focus = false;
 
     if(FileExists("savefile")) {
         FILE *savefile = fopen("savefile", "r");
@@ -333,31 +334,53 @@ int main() {
     }
 
     while(!WindowShouldClose()) {
+        bool redraw = false;
+
+        // Redraw when window gains focus
+        if(IsWindowFocused()) {
+            if(!win_gained_focus) {
+                win_gained_focus = true;
+                redraw = true;
+            }
+        }else {
+            win_gained_focus = false;
+        }
+
         if(IsWindowResized()) {
+            redraw = true;
             win_width = GetScreenWidth();
             win_height = GetScreenHeight();
         }
 
-        if(GetMouseWheelMove() < 0) {
+        float mouse_wheel = GetMouseWheelMove();
+        if(mouse_wheel < 0) {
+            redraw = true;
             camera.zoom -= 0.1;
             if(camera.zoom < 0.1) camera.zoom = 0.1;
-        }else if(GetMouseWheelMove() > 0) {
+        }else if(mouse_wheel > 0) {
+            redraw = true;
             camera.zoom += 0.1;
             if(camera.zoom > 3) camera.zoom = 3;
         }
         int mouse_x = GetMouseX();
         int mouse_y = GetMouseY();
+        if(last_mouse_pos.x != mouse_x || last_mouse_pos.y != mouse_y)
+            redraw = true;
 
         // Key bindings
         if(IsKeyPressed(_KEY_RESET_ZOOM)) {
+            redraw = true;
             camera.zoom = 1;
         }
         if(IsKeyPressed(_KEY_INC_BRUSH_SIZE)) {
+            redraw = true;
             brush_size += _BRUSH_INC;
         }else if(IsKeyPressed(_KEY_DEC_BRUSH_SIZE)) {
+            redraw = true;
             brush_size -= _BRUSH_INC;
             if(brush_size <= 0) brush_size = _BRUSH_INC;
         }else if(IsKeyPressed(_KEY_RESET_BRUSH_SIZE)) {
+            redraw = true;
             brush_size = _INIT_BRUSH_SIZE;
         }
 
@@ -370,6 +393,7 @@ int main() {
             }
             // Undo & Redo
             if(IsKeyPressed(_KEY_UNDO) && history_index < 64) {
+                redraw = true;
                 if(stroke_count > 1) {
                     Stroke **ls = &strokes;
                     for(int i = 0; i < stroke_count; ++i) {
@@ -392,6 +416,7 @@ int main() {
                     point_count = 0;
                 }
             }else if(IsKeyPressed(_KEY_REDO) && history_index != 0) {
+                redraw = true;
                 if(last_stroke != NULL) {
                     --history_index;
                     last_stroke->next = history[history_index];
@@ -411,6 +436,7 @@ int main() {
 
         // Pan
         if(IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
+            redraw = true;
             camera.target = (Vector2){
                 camera.target.x - (last_mouse_pos.x - mouse_x)
                                 * (-1) / camera.zoom,
@@ -420,15 +446,19 @@ int main() {
         }else {
             if(!IsKeyDown(_KEY_MODIFIER)) {
                 if(IsKeyDown(_KEY_PAN_UP)) {
+                    redraw = true;
                     camera.target.y -= 8;
                 }
                 if(IsKeyDown(_KEY_PAN_RIGHT)) {
+                    redraw = true;
                     camera.target.x += 8;
                 }
                 if(IsKeyDown(_KEY_PAN_DOWN)) {
+                    redraw = true;
                     camera.target.y += 8;
                 }
                 if(IsKeyDown(_KEY_PAN_LEFT)) {
+                    redraw = true;
                     camera.target.x -= 8;
                 }
             }
@@ -436,27 +466,38 @@ int main() {
 
         // Colors
         // TODO: Make it not bad
-        if(IsKeyPressed(_KEY_COLOR01))
+        if(IsKeyPressed(_KEY_COLOR01)) {
+            redraw = true;
             brush_color = 0;
-        else if(IsKeyPressed(_KEY_COLOR02))
+        }else if(IsKeyPressed(_KEY_COLOR02)) {
+            redraw = true;
             brush_color = 1;
-        else if(IsKeyPressed(_KEY_COLOR03))
+        }else if(IsKeyPressed(_KEY_COLOR03)) {
+            redraw = true;
             brush_color = 2;
-        else if(IsKeyPressed(_KEY_COLOR04))
+        }else if(IsKeyPressed(_KEY_COLOR04)) {
+            redraw = true;
             brush_color = 3;
-        else if(IsKeyPressed(_KEY_COLOR05))
+        }else if(IsKeyPressed(_KEY_COLOR05)) {
+            redraw = true;
             brush_color = 4;
-        else if(IsKeyPressed(_KEY_COLOR06))
+        }else if(IsKeyPressed(_KEY_COLOR06)) {
+            redraw = true;
             brush_color = 5;
-        else if(IsKeyPressed(_KEY_COLOR07))
+        }else if(IsKeyPressed(_KEY_COLOR07)) {
+            redraw = true;
             brush_color = 6;
-        else if(IsKeyPressed(_KEY_COLOR08))
+        }else if(IsKeyPressed(_KEY_COLOR08)) {
+            redraw = true;
             brush_color = 7;
-        else if(IsKeyPressed(_KEY_COLOR09))
+        }else if(IsKeyPressed(_KEY_COLOR09)) {
+            redraw = true;
             brush_color = 8;
+        }
 
         // Start drawing
         if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            redraw = true;
             // Clear history
             if(history_index != 0) {
                 for(unsigned i = 0; i < history_index; ++i) {
@@ -498,6 +539,7 @@ int main() {
         }
         // Stop drawing
         else if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && drawing) {
+            redraw = true;
             last_point->next = createStrokePoint(
                 (mouse_x / camera.zoom) + camera.target.x,
                 (mouse_y / camera.zoom) + camera.target.y
@@ -509,6 +551,7 @@ int main() {
         }
         // Draw
         else if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && drawing) {
+            redraw = true;
             int new_x = (mouse_x / camera.zoom) + camera.target.x;
             int new_y = (mouse_y / camera.zoom) + camera.target.y;
             if(vec2Length(
@@ -522,55 +565,59 @@ int main() {
             }
         }
 
+        // UI
+        if(IsKeyPressed(_KEY_TOGGLE_UI)) {
+            animating_ui = true;
+        }
+        if(animating_ui) {
+            redraw = true;
+            float delta = GetFrameTime();
+            if(ui_closed) {
+                ui_offset -= 1000 * delta;
+                if(ui_offset < 0) {
+                    ui_offset = 0;
+                    animating_ui = false;
+                    ui_closed = false;
+                }
+            }else {
+                ui_offset += 1000 * delta;
+                if(ui_offset > 50) {
+                    ui_offset = 50;
+                    animating_ui = false;
+                    ui_closed = true;
+                }
+            }
+        }
+
         BeginDrawing();
-            ClearBackground(_BG_COLOR);
+            if(redraw) ClearBackground(_BG_COLOR);
 
             BeginMode2D(camera);
 
-                renderStrokes(strokes);
+                if(redraw) renderStrokes(strokes);
 
             EndMode2D();
 
-            // UI
-            if(IsKeyPressed(_KEY_TOGGLE_UI)) {
-                animating_ui = true;
-            }
-            if(animating_ui) {
-                float delta = GetFrameTime();
-                if(ui_closed) {
-                    ui_offset -= 1000 * delta;
-                    if(ui_offset < 0) {
-                        ui_offset = 0;
-                        animating_ui = false;
-                        ui_closed = false;
-                    }
-                }else {
-                    ui_offset += 1000 * delta;
-                    if(ui_offset > 50) {
-                        ui_offset = 50;
-                        animating_ui = false;
-                        ui_closed = true;
-                    }
-                }
-            }
-            renderColors(win_height, colors, brush_color+1, ui_offset);
-            renderBrushSize(brush_size, ui_offset);
-            int zoom_lvl_w = renderZoomLevel(
-                win_width, win_height, camera.zoom, ui_offset
-            );
-            int point_cnt_w = renderPointCount(
-                win_width, win_height, point_count, ui_offset, zoom_lvl_w + 10
-            );
-            renderStrokeCount(
-                win_width, win_height, stroke_count,
-                ui_offset, zoom_lvl_w + point_cnt_w + 20
-            );
+            if(redraw) {
+                renderColors(win_height, colors, brush_color+1, ui_offset);
+                renderBrushSize(brush_size, ui_offset);
+                int zoom_lvl_w = renderZoomLevel(
+                    win_width, win_height, camera.zoom, ui_offset
+                );
+                int point_cnt_w = renderPointCount(
+                    win_width, win_height, point_count, ui_offset, zoom_lvl_w + 10
+                );
+                renderStrokeCount(
+                    win_width, win_height, stroke_count,
+                    ui_offset, zoom_lvl_w + point_cnt_w + 20
+                );
 
-            // Mouse Cursor
-            DrawCircleLines(
-                mouse_x, mouse_y, (float)brush_size / 2 * camera.zoom,
-                (Color){230, 230, 230, 150}
-            );
+                // Mouse Cursor
+                DrawCircleLines(
+                    mouse_x, mouse_y, (float)brush_size / 2 * camera.zoom,
+                    (Color){230, 230, 230, 150}
+                );
+            }
         EndDrawing();
 
         last_mouse_pos.x = mouse_x;
