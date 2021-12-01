@@ -3,7 +3,7 @@
 # Singularity
 
 <p>
-    <img src="https://img.shields.io/badge/Latest_Release-0.1-green?style=for-the-badge"/>
+    <img src="https://img.shields.io/badge/Latest_Release-0.2-green?style=for-the-badge"/>
     <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge"/>
 </p>
 

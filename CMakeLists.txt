@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(Singularity VERSION 0.1)
+project(Singularity VERSION 0.2)
 set(_name ${PROJECT_NAME}-${PROJECT_VERSION})
 set(_src
     "src/main.c"
