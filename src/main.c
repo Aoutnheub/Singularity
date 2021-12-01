@@ -50,6 +50,7 @@
 #define _KEY_COLOR08 KEY_EIGHT
 #define _KEY_COLOR09 KEY_NINE
 #define _KEY_TOGGLE_UI KEY_TAB
+#define _KEY_SAVE KEY_S
 
 // UI
 #define _UI_BG (Color){10, 10, 10, 150}
@@ -75,6 +76,7 @@ StrokePoint* createStrokePoint(int _x, int _y) {
 typedef struct Stroke {
     int size;
     Color color;
+    unsigned point_count;
     struct StrokePoint *points;
     struct Stroke *next;
 } Stroke;
@@ -84,6 +86,7 @@ Stroke* createStroke(int _size, Color _color) {
     if(stroke == NULL) return NULL;
     stroke->size = _size;
     stroke->color = _color;
+    stroke->point_count = 0;
     stroke->points = NULL;
     stroke->next = NULL;
 
@@ -208,6 +211,73 @@ int renderPointCount(
 
     return txt_w + 20;
 }
+
+// Save file format //
+/********************/
+//-Stroke count-----// <count>
+// For each stroke:
+//-Stroke data------// <point count> <size> <red> <green> <blue> <alpha>
+//-Point data-------// <x> <y> <x> <y> ...
+void saveBoard(FILE *_file, Stroke *_strokes, unsigned _stroke_count) {
+    fprintf(_file, "%u\n", _stroke_count);
+    Stroke *cs = _strokes;
+    while(cs != NULL) {
+        fprintf(_file,
+            "%u %i %u %u %u %u\n",
+            cs->point_count, cs->size,
+            cs->color.r, cs->color.g, cs->color.b, cs->color.a
+        );
+        StrokePoint *cp = cs->points;
+        while(cp != NULL) {
+            fprintf(
+                _file, "%i %i ",
+                cp->x, cp->y
+            );
+            cp = cp->next;
+        }
+        fprintf(_file, "\n");
+        cs = cs->next;
+    }
+}
+
+Stroke* openBoard(
+    FILE *_file, unsigned *_stroke_count,
+    unsigned *_point_count, Stroke **_last_stroke
+) {
+    fscanf(_file, "%u\n", _stroke_count);
+    unsigned points;
+    int size;
+    Stroke *strokes = NULL;
+    StrokePoint *lp = NULL;
+    for(unsigned i = 0; i < *_stroke_count; ++i) {
+        unsigned r, g, b, a;
+        fscanf(_file, "%u %i %u %u %u %u\n", &points, &size, &r, &g, &b, &a);
+        if(i == 0) {
+            strokes = createStroke(size, (Color){r, g, b, a});
+            strokes->point_count = points;
+            *_point_count += points;
+            *_last_stroke = strokes;
+        }else {
+            (*_last_stroke)->next = createStroke(size, (Color){r, g, b, a});
+            (*_last_stroke)->next->point_count = points;
+            *_point_count += points;
+            *_last_stroke = (*_last_stroke)->next;
+        }
+        int x, y;
+        for(unsigned ii = 0; ii < points; ++ii) {
+            fscanf(_file, "%i %i ", &x, &y);
+            if(ii == 0) {
+                (*_last_stroke)->points = createStrokePoint(x, y);
+                lp = (*_last_stroke)->points;
+            }else {
+                lp->next = createStrokePoint(x, y);
+                lp = lp->next;
+            }
+        }
+    }
+
+    return strokes;
+}
 // -------------------------------------------------------------------------- //
 
 int main() {
@@ -256,6 +326,12 @@ int main() {
     bool animating_ui = false;
     bool ui_closed = false;
 
+    if(FileExists("savefile")) {
+        FILE *savefile = fopen("savefile", "r");
+        strokes = openBoard(savefile, &stroke_count, &point_count, &last_stroke);
+        fclose(savefile);
+    }
+
     while(!WindowShouldClose()) {
         if(IsWindowResized()) {
             win_width = GetScreenWidth();
@@ -286,6 +362,12 @@ int main() {
         }
 
         if(IsKeyDown(_KEY_MODIFIER)) {
+            // Save
+            if(IsKeyPressed(_KEY_SAVE)) {
+                FILE *savefile = fopen("savefile", "w");
+                saveBoard(savefile, strokes, stroke_count);
+                fclose(savefile);
+            }
             // Undo & Redo
             if(IsKeyPressed(_KEY_UNDO) && history_index < 64) {
                 if(stroke_count > 1) {
@@ -293,6 +375,7 @@ int main() {
                     for(int i = 0; i < stroke_count; ++i) {
                         if(i == stroke_count-2) {
                             history[history_index] = (*ls)->next;
+                            point_count -= (*ls)->next->point_count;
                             (*ls)->next = NULL;
                             last_stroke = *ls;
                         }
@@ -306,6 +389,7 @@ int main() {
                     last_stroke = NULL;
                     ++history_index;
                     --stroke_count;
+                    point_count = 0;
                 }
             }else if(IsKeyPressed(_KEY_REDO) && history_index != 0) {
                 if(last_stroke != NULL) {
@@ -321,6 +405,7 @@ int main() {
                     last_stroke = strokes;
                     ++stroke_count;
                 }
+                point_count += last_stroke->point_count;
             }
         }
 
@@ -333,17 +418,19 @@ int main() {
                                 * (-1) / camera.zoom
             };
         }else {
-            if(IsKeyDown(_KEY_PAN_UP)) {
-                camera.target.y -= 8;
-            }
-            if(IsKeyDown(_KEY_PAN_RIGHT)) {
-                camera.target.x += 8;
-            }
-            if(IsKeyDown(_KEY_PAN_DOWN)) {
-                camera.target.y += 8;
-            }
-            if(IsKeyDown(_KEY_PAN_LEFT)) {
-                camera.target.x -= 8;
+            if(!IsKeyDown(_KEY_MODIFIER)) {
+                if(IsKeyDown(_KEY_PAN_UP)) {
+                    camera.target.y -= 8;
+                }
+                if(IsKeyDown(_KEY_PAN_RIGHT)) {
+                    camera.target.x += 8;
+                }
+                if(IsKeyDown(_KEY_PAN_DOWN)) {
+                    camera.target.y += 8;
+                }
+                if(IsKeyDown(_KEY_PAN_LEFT)) {
+                    camera.target.x -= 8;
+                }
             }
         }
 
@@ -390,6 +477,7 @@ int main() {
                     (mouse_x / camera.zoom) + camera.target.x,
                     (mouse_y / camera.zoom) + camera.target.y
                 );
+                ++strokes->point_count;
                 last_stroke = strokes;
                 last_point = strokes->points;
             }else {
@@ -400,6 +488,7 @@ int main() {
                     (mouse_x / camera.zoom) + camera.target.x,
                     (mouse_y / camera.zoom) + camera.target.y
                 );
+                ++last_stroke->next->point_count;
                 last_stroke = last_stroke->next;
                 last_point = last_stroke->points;
             }
@@ -414,6 +503,7 @@ int main() {
                 (mouse_y / camera.zoom) + camera.target.y
             );
             last_point = NULL;
+            ++last_stroke->point_count;
             ++point_count;
             drawing = false;
         }
@@ -427,6 +517,7 @@ int main() {
             ) > 3) {
                 last_point->next = createStrokePoint(new_x, new_y);
                 last_point = last_point->next;
+                ++last_stroke->point_count;
                 ++point_count;
             }
         }
