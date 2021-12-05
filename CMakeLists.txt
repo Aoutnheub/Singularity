@@ -4,7 +4,8 @@ project(Singularity VERSION 0.2)
 set(_name ${PROJECT_NAME}-${PROJECT_VERSION})
 set(_src
     "src/main.c"
-    "src/themes.h")
+    "src/render.c"
+    "src/stroke.c")
 add_executable(${_name} ${_src})
 IF(WIN32)
     target_link_libraries(${_name} -LIBPATH:${PROJECT_SOURCE_DIR}/raylib/build/raylib/Release raylib -LIBPATH:${PROJECT_SOURCE_DIR}/raylib/build/raylib/external/glfw/src/Release glfw3 Winmm)
