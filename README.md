@@ -52,5 +52,5 @@ No configuration file yet. For now you have to modify the macros starting with `
 ## Dependencies
 
 - [Raylib](https://www.raylib.com/index.html) (included)
-- [CMake](https://cmake.org/)
-- [Git](https://git-scm.com/)
+- [CMake](https://cmake.org/) (building)
+- [Git](https://git-scm.com/) (building)
